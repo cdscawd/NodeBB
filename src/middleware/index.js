@@ -2,11 +2,13 @@
 
 var async = require('async');
 var path = require('path');
+var fs = require('fs');
 var csrf = require('csurf');
 var validator = require('validator');
 var nconf = require('nconf');
 var ensureLoggedIn = require('connect-ensure-login');
 var toobusy = require('toobusy-js');
+var Benchpress = require('benchpressjs');
 
 var plugins = require('../plugins');
 var meta = require('../meta');
@@ -169,6 +171,36 @@ middleware.processTimeagoLocales = function (req, res, next) {
 			res.status(200).sendFile(path, {
 				maxAge: req.app.enabled('cache') ? 5184000000 : 0,
 			});
+		},
+	], next);
+};
+
+middleware.templatesOnDemand = function (req, res, next) {
+	if (!req.path.endsWith('.jst')) {
+		return next();
+	}
+
+	var filePath = path.join(__dirname, '../../build/public/templates', req.path);
+
+	async.waterfall([
+		function (cb) {
+			file.exists(filePath, cb);
+		},
+		function (exists, cb) {
+			if (exists) {
+				return next();
+			}
+
+			fs.readFile(filePath.replace(/\.jst$/, '.tpl'), cb);
+		},
+		function (source, cb) {
+			Benchpress.precompile({
+				source: source.toString(),
+				minify: global.env !== 'development',
+			}, cb);
+		},
+		function (compiled, cb) {
+			fs.writeFile(filePath, compiled, cb);
 		},
 	], next);
 };

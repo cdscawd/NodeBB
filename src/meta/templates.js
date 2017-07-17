@@ -69,12 +69,6 @@ Templates.compile = function (callback) {
 							next(err, source);
 						});
 					},
-					function (source, next) {
-						Benchpress.precompile({
-							source: source,
-							minify: global.env !== 'development',
-						}, next);
-					},
 					function (compiled, next) {
 						fs.writeFile(path.join(viewsPath, relativePath), compiled, next);
 					},

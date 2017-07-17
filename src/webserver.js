@@ -120,8 +120,8 @@ function setupExpressApp(app, callback) {
 
 	var relativePath = nconf.get('relative_path');
 
-	app.engine('tpl', Benchpress.__express);
-	app.set('view engine', 'tpl');
+	app.engine('jst', Benchpress.__express);
+	app.set('view engine', 'jst');
 	app.set('views', nconf.get('views_dir'));
 	app.set('json spaces', process.env.NODE_ENV === 'development' ? 4 : 0);
 	app.use(flash());
