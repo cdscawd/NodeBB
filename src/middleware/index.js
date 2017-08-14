@@ -184,12 +184,13 @@ middleware.processTimeagoLocales = function (req, res, next) {
 	], next);
 };
 
+
 middleware.templatesOnDemand = function (req, res, next) {
-	if (!req.path.endsWith('.jst')) {
+	var viewsDir = nconf.get('views_dir');
+	var filePath = req.filePath || path.join(viewsDir, req.path);
+	if (!filePath.endsWith('.jst')) {
 		return next();
 	}
-
-	var filePath = path.join(__dirname, '../../build/public/templates', req.path);
 
 	async.waterfall([
 		function (cb) {

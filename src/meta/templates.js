@@ -12,6 +12,8 @@ var Benchpress = require('benchpressjs');
 var plugins = require('../plugins');
 var file = require('../file');
 
+var viewsPath = nconf.get('views_dir');
+
 var Templates = module.exports;
 
 Templates.compile = function (callback) {
@@ -19,7 +21,6 @@ Templates.compile = function (callback) {
 
 	var themeConfig = require(nconf.get('theme_config'));
 	var baseTemplatesPaths = themeConfig.baseTheme ? getBaseTemplates(themeConfig.baseTheme) : [nconf.get('base_templates_path')];
-	var viewsPath = nconf.get('views_dir');
 
 	function processImports(paths, relativePath, source, callback) {
 		var regex = /<!-- IMPORT (.+?) -->/;
@@ -76,6 +77,9 @@ Templates.compile = function (callback) {
 			}, next);
 		},
 		function (next) {
+			rimraf(path.join(viewsPath, '*.jst'), next);
+		},
+		function (next) {
 			winston.verbose('[meta/templates] Successfully compiled templates.');
 			next();
 		},
@@ -100,7 +104,6 @@ function getBaseTemplates(theme) {
 
 function preparePaths(baseTemplatesPaths, callback) {
 	var coreTemplatesPath = nconf.get('core_templates_path');
-	var viewsPath = nconf.get('views_dir');
 	var pluginTemplates;
 	async.waterfall([
 		function (next) {

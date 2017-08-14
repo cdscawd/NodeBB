@@ -2,8 +2,8 @@
 
 var async = require('async');
 var winston = require('winston');
-var Benchpress = require('benchpressjs');
 var _ = require('lodash');
+var Benchpress = require('benchpressjs');
 
 var plugins = require('../plugins');
 var translator = require('../translator');
