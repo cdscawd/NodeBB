@@ -14,6 +14,7 @@ var User = require('./user');
 var Plugins = require('./plugins');
 var meta = require('./meta');
 var translator = require('./translator');
+var pubsub = require('./pubsub');
 
 var transports = {
 	sendmail: nodemailer.createTransport(sendmailTransport()),
@@ -25,9 +26,25 @@ var fallbackTransport;
 
 var Emailer = module.exports;
 
+Emailer._defaultPayload = {};
 
 Emailer.registerApp = function (expressApp) {
 	app = expressApp;
+
+	var logo = null;
+	if (meta.configs.hasOwnProperty('brand:emailLogo')) {
+		logo = (!meta.config['brand:emailLogo'].startsWith('http') ? nconf.get('url') : '') + meta.config['brand:emailLogo'];
+	}
+
+	Emailer._defaultPayload = {
+		url: nconf.get('url'),
+		site_title: meta.config.title || 'NodeBB',
+		logo: {
+			src: logo,
+			height: meta.config['brand:emailLogo:height'],
+			width: meta.config['brand:emailLogo:width'],
+		},
+	};
 
 	// Enable Gmail transport if enabled in ACP
 	if (parseInt(meta.config['email:GmailTransport:enabled'], 10) === 1) {
@@ -45,6 +62,15 @@ Emailer.registerApp = function (expressApp) {
 		fallbackTransport = transports.sendmail;
 	}
 
+	// Update default payload if new logo is uploaded
+	pubsub.on('config:update', function (config) {
+		if (config) {
+			Emailer._defaultPayload.logo.src = config['brand:emailLogo'];
+			Emailer._defaultPayload.logo.height = config['brand:emailLogo:height'];
+			Emailer._defaultPayload.logo.width = config['brand:emailLogo:width'];
+		}
+	});
+
 	return Emailer;
 };
 
@@ -54,6 +80,9 @@ Emailer.send = function (template, uid, params, callback) {
 		winston.warn('[emailer] App not ready!');
 		return callback();
 	}
+
+	// Combined passed-in payload with default values
+	params = Object.assign({}, Emailer._defaultPayload, params);
 
 	async.waterfall([
 		function (next) {

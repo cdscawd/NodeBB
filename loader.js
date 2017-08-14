@@ -168,6 +168,9 @@ Loader.restart = function () {
 		nconf.set('url', conf.url);
 		nconf.stores.env.readOnly = true;
 
+		if (process.env.url !== conf.url) {
+			process.env.url = conf.url;
+		}
 		Loader.start();
 	});
 };
@@ -223,6 +226,7 @@ fs.open(path.join(__dirname, 'config.json'), 'r', function (err) {
 			require('daemon')({
 				stdout: process.stdout,
 				stderr: process.stderr,
+				cwd: process.cwd(),
 			});
 
 			fs.writeFileSync(pidFilePath, process.pid);
