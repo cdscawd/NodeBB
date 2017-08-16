@@ -184,7 +184,6 @@ middleware.processTimeagoLocales = function (req, res, next) {
 	], next);
 };
 
-
 middleware.templatesOnDemand = function (req, res, next) {
 	var viewsDir = nconf.get('views_dir');
 	var filePath = req.filePath || path.join(viewsDir, req.path);
@@ -213,4 +212,9 @@ middleware.templatesOnDemand = function (req, res, next) {
 			fs.writeFile(filePath, compiled, cb);
 		},
 	], next);
+};
+
+middleware.delayLoading = function (req, res, next) {
+	// Introduces an artificial delay during load so that brute force attacks are effectively mitigated
+	setTimeout(next, 1000);
 };
